@@ -1,90 +1,125 @@
+// Import necessary modules
 const express = require('express');
 const jwt = require('jsonwebtoken');
+
+// Import database of books
 let books = require("./booksdb.js");
+
+// Create a router instance for registered user routes
 const regd_users = express.Router();
 
+// Initialize an empty array to store registered users
 let users = [];
 
-const isValid = (username)=>{ //returns boolean
-  return users.some((users) => users.username === username)
-}
+// Function to check if a username is valid
+const isValid = (username) => {
+    // Check if the username is not empty and is alphanumeric
+    if (!username || !/^[a-zA-Z0-9]+$/.test(username)) {
+        return false;
+    }
+    
+    // Additional validation criteria can be added here if needed
+    // For example:
 
-const authenticatedUser = (username,password)=>{ //returns boolean
-  const user = users.find((users) => users.username === username)
-  return user && user.password === password
-}
+    // Check if the username length is within a specific range
+    if (username.length < 3 || username.length > 20) {
+        return false;
+    }
 
-//only registered users can login
-regd_users.post("/login", (req,res) => {
-  const { username, password } = req.body
+    // Check if the username meets certain character restrictions
+    // For example, if you want to allow only letters and digits
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        return false;
+    }
 
-  if (!isValid(username) || !authenticatedUser(username, password)) {
-    return res.status(401).json({ message: 'Invalid username or password' })
-  }
-  const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: 60 * 60 })
-  users.find((u) => u.username === username).token = token
-  console.log(users)
-  return res.status(200).json({ token })
-})
+    // Check against a list of reserved usernames, etc.
+    // For example, if you want to disallow certain usernames
+    const reservedUsernames = ['admin', 'root', 'superuser'];
+    if (reservedUsernames.includes(username.toLowerCase())) {
+        return false;
+    }
 
-// Add a book review
+    // If all validation criteria pass, return true
+    return true;
+};
+
+// Function to check if a username and password match the records
+const authenticatedUser = (username, password) => {
+    // Check if username and password are provided
+    if (!username || !password) {
+        return false;
+    }
+
+    // Find the user in the records based on the username
+    const user = users.find(user => user.username === username);
+
+    // If user not found, return false
+    if (!user) {
+        return false;
+    }
+
+    // Check if the provided password matches the stored password for the user
+    // You should implement proper password hashing and comparison here
+    // For demonstration purposes, we are comparing passwords directly (not recommended in production)
+    if (user.password === password) {
+        return true;
+    }
+
+    // If password doesn't match, return false
+    return false;
+};
+
+
+// Route to handle user login
+regd_users.post("/login", (req, res) => {
+    const { username, password } = req.body;
+
+    // Check if username and password are provided
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    // Check if the user is registered and the provided credentials are correct
+    if (!authenticatedUser(username, password)) {
+        return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ username: username }, "your_secret_key");
+
+    // Return the token as a response
+    return res.status(200).json({ token: token });
+});
+
+
+// Route to add a book review for an authenticated user
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  const isbn = req.params.isbn
-  const review = req.body.review
-  const token = req.header('Authorization').replace('Bearer ', '')
+    const { isbn } = req.params;
+    const { review } = req.body;
 
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY)
-    const user = users.find((user) => user.username === decoded.username)
+    // Check if review is provided
+    if (!review) {
+        return res.status(400).json({ message: "Review is required" });
+    }
 
+    // Check if the book exists
     if (!books[isbn]) {
-      return res.status(404).json({ message: 'Book not found' })
+        return res.status(404).json({ message: "Book not found" });
     }
 
-    if (!books[isbn].reviews) {
-      books[isbn].reviews = []
-    }
+    // Add the review to the book
+    books[isbn].reviews.push(review);
 
-    const reviewsBooks = books[isbn].reviews
-    const reviewUser = Object.keys(reviewsBooks).find(
-      (r) => r.username === user
-    )
+    // Return success message
+    return res.status(200).json({ message: "Review added successfully" });
+});
 
-    if (reviewUser) {
-      return res.status(400).json({ message: 'Review already exists' })
-    } else {
-      books[isbn].reviews[user] = review
-      return res.status(200).json({ message: 'Review added successfully' })
-    }
-  } catch (error) {
-    res.status(400).send('Invalid token')
-  }
-})
 
-regd_users.delete('/auth/review/:isbn', (req, res) => {
-  const isbn = req.params.isbn
-  const token = req.headers.authorization.split(' ')[1]
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY)
-    const username = decoded.username
-
-    if (!books[isbn]) {
-      return res.status(404).json({ message: 'Book not found' })
-    }
-    if (!books[isbn].reviews) {
-      return res.status(404).json({ message: 'No reviews found for this book' })
-    }
-
-    books[isbn].reviews = Object.keys(books[isbn].reviews).find(
-      (r) => r.username !== username
-    )
-    return res.status(200).json({ message: 'Review deleted successfully' })
-  } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized' })
-  }
-})
-
+// Export the router containing registered user routes
 module.exports.authenticated = regd_users;
+
+// Export the isValid function to validate usernames
 module.exports.isValid = isValid;
+
+// Export the users array to store registered users
 module.exports.users = users;
