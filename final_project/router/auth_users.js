@@ -21,7 +21,7 @@ regd_users.post("/login", (req,res) => {
   if (!isValid(username) || !authenticatedUser(username, password)) {
     return res.status(401).json({ message: 'Invalid username or password' })
   }
-  const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '1h' })
+  const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: 60 * 60 })
   users.find((u) => u.username === username).token = token
   console.log(users)
   return res.status(200).json({ token })
