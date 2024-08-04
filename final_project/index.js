@@ -23,7 +23,7 @@ app.use("/customer/auth/*", function auth(req,res,next){
 
  // Check if token is provided
  if (!token) {
-  return res.status(401.json({ message: "Unauthorized: Token is missing" });
+  return res.status(401).json({ message: "Unauthorized: Token is missing" });
  }
 
  try }
