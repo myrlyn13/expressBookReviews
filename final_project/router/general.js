@@ -44,7 +44,6 @@ public_users.get('/isbn/:isbn', function (req, res) {
     } else {
         res.status(404).json({ message: "Book not found" });
     }
-});
   getBook
     .then(() => console.log('Promise for Task 11 resolved'))
     .catch(() => console.log('Promise for Task 11 rejected'));
@@ -60,7 +59,6 @@ public_users.get('/author/:author', function (req, res) {
     } else {
         res.status(404).json({ message: "Books by this author not found" });
     }
-});
   getBooks
     .then(() => console.log('Promise for Task 12 resolved'))
     .catch(() => console.log('Promise for Task 12 rejected'));
@@ -76,7 +74,6 @@ public_users.get('/title/:title', function (req, res) {
     } else {
         res.status(404).json({ message: "Book not found" });
     }
-});
   getBooks
     .then(() => console.log('Promise for Task 13 resolved'))
     .catch(() => console.log('Promise for Task 13 rejected'));
