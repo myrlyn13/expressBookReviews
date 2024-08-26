@@ -17,7 +17,7 @@ public_users.post('/register', function (req, res) {
     }
 
     // Store user information
-    users[username] = { password };
+    users.push({ username, password });
 
     // Send success response
     res.status(201).json({ message: "User registered successfully" });
