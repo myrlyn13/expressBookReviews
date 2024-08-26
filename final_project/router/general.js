@@ -25,13 +25,8 @@ public_users.post('/register', function (req, res) {
 
 // Get the book list available in the shop
 public_users.get('/', function (req, res) {
-    const bookList = Object.values(books);
-
-    if (bookList.length > 0) {
-        res.status(200).json(bookList);
-    } else {
-        res.status(404).json({ message: "No books available" });
-    }
+    const getBooks = new Promise(resolve => resolve(res.status(200).json(books)));
+    getBooks.then(() => console.log('Promise for Task 10 resolved'));
 });
 
 // Get book details based on ISBN
@@ -44,7 +39,7 @@ public_users.get('/isbn/:isbn', function (req, res) {
     } else {
         res.status(404).json({ message: "Book not found" });
     }
-  getBook
+  getBooks
     .then(() => console.log('Promise for Task 11 resolved'))
     .catch(() => console.log('Promise for Task 11 rejected'));
 });
